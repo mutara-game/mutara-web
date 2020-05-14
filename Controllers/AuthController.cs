@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System.Text;
 
 namespace mutara_web.Controllers
 {
@@ -14,10 +15,18 @@ namespace mutara_web.Controllers
        
 
         private readonly ILogger<AuthController> logger;
+        private readonly HttpClient client;
 
         public AuthController(ILogger<AuthController> logger)
         {
             this.logger = logger;
+            this.client = new HttpClient();
+
+            // TODO get from configuration:
+            string user = "clientid";
+            string password = "clientsecret";
+            string userAndPasswordToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + password));
+            client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Basic {userAndPasswordToken}");
         }
 
         [HttpGet]
@@ -27,21 +36,24 @@ namespace mutara_web.Controllers
         }
 
         [HttpGet("signin")]
-        public String SignIn(string code) {
-
-            System.Net.HttpClient client =new System.Net.HttpClient();
-
-
-
-            return "Hello Signin your code is " + code;
-            /*
-            The custom application that’s hosted at the redirect URL can then extract the authorization code from the query parameters and exchange it for user pool tokens. 
-            The exchange occurs by submitting a POST request to https://AUTH_DOMAIN/oauth2/token with the following application/x-www-form-urlencoded parameters:
-grant_type – Set to “authorization_code” for this grant.
-code – The authorization code that’s vended to the user.
-client_id – Same as from the request in step 1.
-redirect_uri – Same as from the request in step 1.
-code_verifier (optional, is required if a code_challenge was specified in the original request) – The base64 URL-encoded representation of the unhashed, random string that was used to generate the PKCE code_challenge in the original request.
+        public async Task<String> SignIn(string code) {
+            var map = new Dictionary<string, string>();
+            map.Add("grant_type", "authorization_code");
+            map.Add("code", code);
+            map.Add("client_id", "clientid"); // TODO get from config
+            map.Add("redirect_uri", "https://localhost:5001/auth/signin"); // TODO get from config
+            HttpContent content = new FormUrlEncodedContent(map);
+            HttpResponseMessage response = await client.PostAsync("https://mutara-dev.auth.us-west-2.amazoncognito.com/oauth2/token", content);
+            logger.LogInformation(response.ToString());
+            return await response.Content.ReadAsStringAsync();
+            /* response is something like:
+{
+"id_token": "eybigoldstringJA",
+"access_token": "greatbigstring",
+"refresh_token": "ealskdfjasdf",
+"expires_in": 3600,
+"token_type": "Bearer"
+}
 */
         }
     }
