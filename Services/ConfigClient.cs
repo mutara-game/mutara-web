@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 namespace mutara_web.Services {
 
 
+// TODO: does Consul.ConsulClient do any sort of caching or does it call consul every time?
     public class ConfigClient {
         private readonly ILogger<ConfigClient> logger;
 
