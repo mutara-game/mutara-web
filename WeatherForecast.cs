@@ -1,6 +1,6 @@
 using System;
 
-namespace mutara_web
+namespace Mutara.Web
 {
     public class WeatherForecast
     {

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace mutara_web.Controllers
+namespace Mutara.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]

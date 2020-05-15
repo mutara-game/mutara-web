@@ -5,19 +5,16 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Text;
-using mutara_web.Services;
+using Mutara.Web.Services;
 
-namespace mutara_web.Controllers
+namespace Mutara.Web.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class AuthController : ControllerBase
     {
-       
-
         private readonly ILogger<AuthController> logger;
         private readonly HttpClient client;
-        private readonly ConfigClient configClient;
 
         private readonly string clientId;
         private readonly string redirectUri;
@@ -26,7 +23,6 @@ namespace mutara_web.Controllers
         public AuthController(ILogger<AuthController> logger, ConfigClient configClient)
         {
             this.logger = logger;
-            this.configClient = configClient;
             this.client = new HttpClient();
 
             this.clientId = configClient.GetValue("secrets.yaml", "cognito/clientId").GetAwaiter().GetResult();
@@ -47,14 +43,16 @@ namespace mutara_web.Controllers
 
         [HttpGet("signin")]
         public async Task<String> SignIn(string code) {
-            var map = new Dictionary<string, string>();
-            map.Add("grant_type", "authorization_code");
-            map.Add("code", code);
-            map.Add("client_id", await configClient.GetValue("secrets.yaml", "cognito/clientId"));
-            map.Add("redirect_uri", redirectUri);
+            var map = new Dictionary<string, string>
+            {
+                {"grant_type", "authorization_code"},
+                {"code", code},
+                {"client_id", clientId},
+                {"redirect_uri", redirectUri}
+            };
             HttpContent content = new FormUrlEncodedContent(map);
 
-            HttpResponseMessage response = await client.PostAsync(cognitoDomain + "/oauth2/token", content);
+            HttpResponseMessage response = await client.PostAsync($"{cognitoDomain}/oauth2/token", content);
             logger.LogInformation(response.ToString());
             return await response.Content.ReadAsStringAsync();
             /* response is something like:

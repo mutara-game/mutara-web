@@ -10,9 +10,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using mutara_web.Services;
+using Mutara.Web.Services;
 
-namespace mutara_web
+namespace Mutara.Web
 {
     public class Startup
     {
