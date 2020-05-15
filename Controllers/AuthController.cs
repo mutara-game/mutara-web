@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using mutara_web.Services;
 
 namespace mutara_web.Controllers
 {
@@ -16,15 +17,17 @@ namespace mutara_web.Controllers
 
         private readonly ILogger<AuthController> logger;
         private readonly HttpClient client;
+        private readonly ConfigClient configClient;
 
-        public AuthController(ILogger<AuthController> logger)
+        public AuthController(ILogger<AuthController> logger, ConfigClient configClient)
         {
             this.logger = logger;
+            this.configClient = configClient;
             this.client = new HttpClient();
 
             // TODO get from configuration:
-            string user = "clientid";
-            string password = "clientsecret";
+            string user = configClient.GetValue("secrets.yaml", "cognito/clientId").GetAwaiter().GetResult();
+            string password = configClient.GetValue("secrets.yaml", "cognito/clientSecret").GetAwaiter().GetResult();
             string userAndPasswordToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + password));
             client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Basic {userAndPasswordToken}");
         }

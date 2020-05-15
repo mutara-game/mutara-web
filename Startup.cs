@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using mutara_web.Services;
 
 namespace mutara_web
 {
@@ -26,6 +27,7 @@ namespace mutara_web
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddSingleton<ConfigClient, ConfigClient>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
