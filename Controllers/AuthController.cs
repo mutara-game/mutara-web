@@ -19,17 +19,24 @@ namespace mutara_web.Controllers
         private readonly HttpClient client;
         private readonly ConfigClient configClient;
 
+        private readonly string clientId;
+        private readonly string redirectUri;
+        private readonly string cognitoDomain;
+
         public AuthController(ILogger<AuthController> logger, ConfigClient configClient)
         {
             this.logger = logger;
             this.configClient = configClient;
             this.client = new HttpClient();
 
-            // TODO get from configuration:
-            string user = configClient.GetValue("secrets.yaml", "cognito/clientId").GetAwaiter().GetResult();
-            string password = configClient.GetValue("secrets.yaml", "cognito/clientSecret").GetAwaiter().GetResult();
-            string userAndPasswordToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + password));
+            this.clientId = configClient.GetValue("secrets.yaml", "cognito/clientId").GetAwaiter().GetResult();
+            string clientSecret = configClient.GetValue("secrets.yaml", "cognito/clientSecret").GetAwaiter().GetResult();
+            string userAndPasswordToken = Convert.ToBase64String(Encoding.UTF8.GetBytes(clientId + ":" + clientSecret));
             client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Basic {userAndPasswordToken}");
+
+            this.cognitoDomain = configClient.GetValue("secrets.yaml", "cognito/cognitoDomain").GetAwaiter().GetResult();
+            this.redirectUri = configClient.GetValue("secrets.yaml", "cognito/redirectUri").GetAwaiter().GetResult();
+
         }
 
         [HttpGet]
@@ -43,10 +50,11 @@ namespace mutara_web.Controllers
             var map = new Dictionary<string, string>();
             map.Add("grant_type", "authorization_code");
             map.Add("code", code);
-            map.Add("client_id", "clientid"); // TODO get from config
-            map.Add("redirect_uri", "https://localhost:5001/auth/signin"); // TODO get from config
+            map.Add("client_id", await configClient.GetValue("secrets.yaml", "cognito/clientId"));
+            map.Add("redirect_uri", redirectUri);
             HttpContent content = new FormUrlEncodedContent(map);
-            HttpResponseMessage response = await client.PostAsync("https://mutara-dev.auth.us-west-2.amazoncognito.com/oauth2/token", content);
+
+            HttpResponseMessage response = await client.PostAsync(cognitoDomain + "/oauth2/token", content);
             logger.LogInformation(response.ToString());
             return await response.Content.ReadAsStringAsync();
             /* response is something like:
