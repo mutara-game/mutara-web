@@ -32,6 +32,7 @@ namespace Mutara.Web.Controllers
         [HttpPost("signin")]
         public async Task<SignInResponse> SignIn(SignInRequest request)
         {
+            logger.LogInformation("sign in request received");
             var userPool = new CognitoUserPool(cognitoPoolId, clientId, cognitoIpClient);
             var user = new CognitoUser(request.UserName, clientId, userPool, cognitoIpClient);
 
