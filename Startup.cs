@@ -1,3 +1,6 @@
+using Amazon;
+using Amazon.CognitoIdentityProvider;
+using Amazon.Runtime;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +27,12 @@ namespace Mutara.Web
         {
             services.AddControllers();
             services.AddSingleton<ConfigClient, ConfigClient>();
+            
+            // AWS
+            var regionEndpoint = RegionEndpoint.USWest2;
+            var awsCredentials = new AnonymousAWSCredentials();
+            services.AddSingleton<AmazonCognitoIdentityProviderClient, AmazonCognitoIdentityProviderClient>(
+                serviceProvider => new AmazonCognitoIdentityProviderClient(awsCredentials, regionEndpoint));
             
             // swagger generator
             services.AddSwaggerGen(c =>
