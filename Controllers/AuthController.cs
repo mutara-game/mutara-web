@@ -1,7 +1,9 @@
+using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Amazon.CognitoIdentityProvider;
+using Amazon.CognitoIdentityProvider.Model;
 using Amazon.Extensions.CognitoAuthentication;
 using Mutara.Web.Api;
 using Mutara.Web.Services;
@@ -30,31 +32,40 @@ namespace Mutara.Web.Controllers
         }
 
         [HttpPost("signin")]
-        public async Task<SignInResponse> SignIn(SignInRequest request)
+        public async Task<IActionResult> SignIn(SignInRequest request)
         {
             logger.LogInformation("sign in request received");
             var userPool = new CognitoUserPool(cognitoPoolId, clientId, cognitoIpClient);
             var user = new CognitoUser(request.UserName, clientId, userPool, cognitoIpClient);
 
-            AuthFlowResponse authResponse = await user.StartWithSrpAuthAsync(new InitiateSrpAuthRequest()
-                {
-                    Password = request.Password
-                })
-                .ConfigureAwait(false);
-
-            logger.LogInformation($"{authResponse}");
-
-            // TODO This is totally broken if there's any sort of error,
-            // which there will be a lot of.
-            return new SignInResponse()
+            try
             {
-                SessionId = authResponse.SessionID,
-                AccessToken = authResponse.AuthenticationResult.AccessToken,
-                IdToken = authResponse.AuthenticationResult.IdToken,
-                RefreshToken = authResponse.AuthenticationResult.RefreshToken,
-                TokenType = authResponse.AuthenticationResult.TokenType,
-                ExpiresIn = authResponse.AuthenticationResult.ExpiresIn
-            };
+                AuthFlowResponse authResponse = await user.StartWithSrpAuthAsync(new InitiateSrpAuthRequest()
+                    {
+                        Password = request.Password
+                    })
+                    .ConfigureAwait(false);
+
+                return Ok(new ApiOkResponse<SignInResponse>(new SignInResponse()
+                {
+                    SessionId = authResponse.SessionID,
+                    AccessToken = authResponse.AuthenticationResult.AccessToken,
+                    IdToken = authResponse.AuthenticationResult.IdToken,
+                    RefreshToken = authResponse.AuthenticationResult.RefreshToken,
+                    TokenType = authResponse.AuthenticationResult.TokenType,
+                    ExpiresIn = authResponse.AuthenticationResult.ExpiresIn
+                }));
+            }
+            catch (NotAuthorizedException e)
+            {
+                logger.LogWarning(e, $"user {request.UserName} failed to authenticate with cognito");
+                return Unauthorized(new ApiResponse(401, "authentication failed"));
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, $"Unexpected exception from user {request.UserName} failing to authnticate with cognito");
+                throw;
+            }
         }
     }
 }
