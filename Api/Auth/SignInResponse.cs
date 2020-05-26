@@ -1,4 +1,4 @@
-namespace Mutara.Web.Api
+namespace Mutara.Web.Api.Auth
 {
     public class SignInResponse
     {
