@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Cognito: Auto-Confirm Users as they are created.
+Resources:
+  MutaraDevAutoConfirmUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      Runtime: nodejs12.x
+      CodeUri: .
+      Description: ''
+      MemorySize: 128
+      Timeout: 3
+      Role: >-
+        arn:aws:iam::260633162082:role/service-role/Mutara-Dev-Auto-Confirm-User-role-rbft8bzy
