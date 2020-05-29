@@ -2,6 +2,8 @@ using System;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Mutara.Web.Api;
+using Mutara.Web.Api.Player;
 
 namespace Mutara.Web.Controllers
 {
@@ -18,9 +20,16 @@ namespace Mutara.Web.Controllers
         }
 
         [HttpGet("details/{playerId}")]
-        public string Details(Guid playerId)
+        public ApiOkResponse<PlayerDetailsResponse> Details(Guid playerId)
         {
-            return $"hello player {playerId}";
+            return new ApiOkResponse<PlayerDetailsResponse>(
+                new PlayerDetailsResponse
+                {
+                    PlayerId = playerId,
+                    Magic = "Foooooooooooooo"
+                }
+            );
         }
     }
+
 }
